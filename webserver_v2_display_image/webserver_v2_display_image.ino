@@ -1,11 +1,26 @@
 #include <WiFi.h>
 #include <WebServer.h>
-#include <SPIFFS.h>
 
 const char* ssid = "YOUR_SSID";
 const char* password = "YOUR_PASSWORD";
 
 WebServer server(80);
+
+// Example: a small red dot PNG base64 (replace with your image's base64)
+const char* imageBase64 = 
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQ"
+  "ImWNgYGBgAAAABAABJzQnCgAAAABJRU5ErkJggg==";
+
+void handleRoot() {
+  String html = "<html><body>";
+  html += "<h1>Hello from ESP32</h1>";
+  html += "<img src='data:image/png;base64,";
+  html += imageBase64;
+  html += "'/>";
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -16,26 +31,11 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi connected.");
+  Serial.println("\nWiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (!SPIFFS.begin(true)) {
-    Serial.println("SPIFFS Mount Failed");
-    return;
-  }
-
-  server.on("/", HTTP_GET, []() {
-    File file = SPIFFS.open("/index.html", "r");
-    server.streamFile(file, "text/html");
-    file.close();
-  });
-
-  server.on("/logo.jpg", HTTP_GET, []() {
-    File file = SPIFFS.open("/logo.jpg", "r");
-    server.streamFile(file, "image/jpeg");
-    file.close();
-  });
+  server.on("/", handleRoot);
 
   server.begin();
   Serial.println("HTTP server started");
