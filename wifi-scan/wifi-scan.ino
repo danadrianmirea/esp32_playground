@@ -2,6 +2,10 @@
 
 void setup() {
   Serial.begin(115200);
+  delay(1000); // Give serial time to initialize
+}
+
+void loop() {
   Serial.println("Scanning WiFi networks...");
   int n = WiFi.scanNetworks();
   Serial.println("Scan done");
@@ -17,8 +21,6 @@ void setup() {
       Serial.println(" dBm)");
     }
   }
-}
-
-void loop() {
-  // Do nothing
+  Serial.println();
+  delay(10000); // Scan every 10 seconds
 }
