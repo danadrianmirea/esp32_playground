@@ -41,18 +41,6 @@ void loop() {
     Serial.print("Hall Effect Sensor Reading: ");
     Serial.print(averageValue);
     
-    // Add a simple visual indicator of magnetic field strength
-    Serial.print(" | Field Strength: ");
-    if(abs(averageValue - 2048) < 50) {  // Center value is around 2048
-        Serial.println("No significant magnetic field detected");
-    } else if(abs(averageValue - 2048) < 100) {
-        Serial.println("Weak magnetic field detected");
-    } else if(abs(averageValue - 2048) < 200) {
-        Serial.println("Moderate magnetic field detected");
-    } else {
-        Serial.println("Strong magnetic field detected");
-    }
-
     // Wait before next reading
     delay(500);
 } 
