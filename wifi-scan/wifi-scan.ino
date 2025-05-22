@@ -1,23 +1,26 @@
-void Task1(void *pvParameters) {
-  while (true) {
-    Serial.println("Task 1 is running");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
-
-void Task2(void *pvParameters) {
-  while (true) {
-    Serial.println("Task 2 is running");
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-  }
-}
+#include "WiFi.h"
 
 void setup() {
   Serial.begin(115200);
-  xTaskCreatePinnedToCore(Task1, "Task1", 1000, NULL, 1, NULL, 0);
-  xTaskCreatePinnedToCore(Task2, "Task2", 1000, NULL, 1, NULL, 1);
+  delay(1000); // Give serial time to initialize
 }
 
 void loop() {
-  // nothing here
+  Serial.println("Scanning WiFi networks...");
+  int n = WiFi.scanNetworks();
+  Serial.println("Scan done");
+  if (n == 0) {
+    Serial.println("No networks found.");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found:");
+    for (int i = 0; i < n; ++i) {
+      Serial.print(WiFi.SSID(i));
+      Serial.print(" (");
+      Serial.print(WiFi.RSSI(i));
+      Serial.println(" dBm)");
+    }
+  }
+  Serial.println();
+  delay(10000); // Scan every 10 seconds
 }
