@@ -1,24 +1,47 @@
-bool benchmarkTriggered = false;
+// === ESP32 Benchmark Tool with Repeating Messages and Benchmarks ===
+
+unsigned long lastMessageTime = 0;
+bool benchmarkCompleted = false;
+bool benchmarkStarted = false;
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  Serial.println("=== ESP32 Benchmark Tool ===");
-  Serial.println("Press 'Y' and Enter to start benchmark...");
+  while (!Serial);  // Optional: Wait for Serial to connect
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+
+  // Display message every 5 seconds
+  if (currentMillis - lastMessageTime >= 5000) {
+    lastMessageTime = currentMillis;
+
+    if (!benchmarkStarted) {
+      Serial.println("=== ESP32 Benchmark Tool ===");
+      Serial.println("Press 'Y' and Enter to start benchmark...");
+    } else if (benchmarkCompleted) {
+      Serial.println("Press 'Y' and Enter to run benchmark again...");
+    }
+  }
+
+  // Handle serial input
   if (Serial.available()) {
     char c = Serial.read();
     if (c == 'Y' || c == 'y') {
+      benchmarkStarted = true;
+      benchmarkCompleted = false;
+      Serial.println("Starting benchmark...");
+
       runBenchmark();
-      Serial.println("\nPress 'Y' and Enter to run benchmark again...");
+
+      Serial.println("\nBenchmark complete.");
+      benchmarkCompleted = true;
+      lastMessageTime = millis(); // reset message timer
     } else {
-      // Optional: ignore or give feedback for other keys
       Serial.println("Invalid input. Press 'Y' to run the benchmark.");
     }
 
-    // Clear any extra characters in buffer
+    // Clear any remaining characters
     while (Serial.available()) Serial.read();
   }
 }
