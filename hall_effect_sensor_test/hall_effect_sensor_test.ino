@@ -2,7 +2,7 @@
 const int hallSensorPin = 25;  // Pin connected to the Hall sensor output
 
 void setup() {
-  Serial.begin(9600);             // Initialize serial communication at 9600 bps
+  Serial.begin(115200);             // Initialize serial communication
   pinMode(hallSensorPin, INPUT);  // Set hall sensor pin as input
 }
 
