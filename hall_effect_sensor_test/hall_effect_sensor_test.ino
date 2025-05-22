@@ -1,46 +1,22 @@
-// ESP32 Hall Effect Sensor Demo
-// This program reads the built-in Hall effect sensor and displays the values
-// The sensor can detect magnetic fields and their strength
 
-// Define the number of samples to average for more stable readings
-#define NUM_SAMPLES 10
-
-// Variables to store sensor readings
-int hallValue = 0;
-int averageValue = 0;
-unsigned long lastMessageTime = 0;
-const unsigned long MESSAGE_INTERVAL = 5000; // 5 seconds in milliseconds
+const int hallSensorPin = 25;  // Pin connected to the Hall sensor output
 
 void setup() {
-    // Initialize serial communication
-    Serial.begin(115200);
+  Serial.begin(9600);             // Initialize serial communication at 9600 bps
+  pinMode(hallSensorPin, INPUT);  // Set hall sensor pin as input
 }
 
 void loop() {
-    // Display welcome message every 5 seconds
-    unsigned long currentTime = millis();
-    if (currentTime - lastMessageTime >= MESSAGE_INTERVAL) {
-        Serial.println("----------------------------------------");
-        Serial.println("ESP32 Hall Effect Sensor Demo");
-        Serial.println("Bring a magnet close to the ESP32 to see the values change");
-        Serial.println("----------------------------------------");
-        lastMessageTime = currentTime;
-    }
+  int sensorValue = analogRead(hallSensorPin);  // Read analog value from Hall sensor
+  Serial.print(sensorValue);                    // Output raw sensor value to Serial Monitor
+  delay(200);                                   // Delay for 500 milliseconds
 
-    // Take multiple samples and average them for more stable readings
-    averageValue = 0;
-    for(int i = 0; i < NUM_SAMPLES; i++) {
-        // Read the Hall effect sensor using the built-in function
-        hallValue = analogRead(36);  // Using ADC1_CH0 (GPIO36) for Hall sensor
-        averageValue += hallValue;
-        delay(10); // Small delay between readings
-    }
-    averageValue = averageValue / NUM_SAMPLES;
+  // Determine magnetic pole based on sensor value
+  if (sensorValue >= 2600) {
+    Serial.print(" - South pole detected");  // South pole detected if value >= 2600
+  } else if (sensorValue <= 1200) {
+    Serial.print(" - North pole detected");  // North pole detected if value <= 1200
+  }
 
-    // Print the average reading
-    Serial.print("Hall Effect Sensor Reading: ");
-    Serial.print(averageValue);
-    
-    // Wait before next reading
-    delay(500);
-} 
+  Serial.println();  // New line for next output
+}
