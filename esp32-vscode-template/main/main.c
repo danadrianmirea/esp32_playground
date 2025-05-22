@@ -5,7 +5,7 @@
 #include "esp_log.h"
 
 #define LED_PIN 2
-#define BLINK_DELAY_MS 100
+#define BLINK_DELAY_MS 1000
 
 static const char *TAG = "BLINK";
 
