@@ -1,10 +1,10 @@
 void setup() {
-  Serial.begin(115200);
-  Serial.println("ESP32 Serial Playground");
+  pinMode(2, OUTPUT); // Built-in LED on many ESP32 boards
 }
 
 void loop() {
-  Serial.print("Uptime (ms): ");
-  Serial.println(millis());
-  delay(1000);
+  digitalWrite(2, HIGH);
+  delay(500);
+  digitalWrite(2, LOW);
+  delay(500);
 }
