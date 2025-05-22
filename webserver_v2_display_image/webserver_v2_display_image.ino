@@ -1,29 +1,20 @@
 #include <WiFi.h>
 #include <WebServer.h>
+#include <LittleFS.h>
 
-const char* ssid = "YOUR_SSID";
-const char* password = "YOUR_PASSWORD";
+const char* ssid = "";
+const char* password = "";
 
 WebServer server(80);
 
-// Example: a small red dot PNG base64 (replace with your image's base64)
-const char* imageBase64 = 
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQ"
-  "ImWNgYGBgAAAABAABJzQnCgAAAABJRU5ErkJggg==";
-
-void handleRoot() {
-  String html = "<html><body>";
-  html += "<h1>Hello from ESP32</h1>";
-  html += "<img src='data:image/png;base64,";
-  html += imageBase64;
-  html += "'/>";
-  html += "</body></html>";
-
-  server.send(200, "text/html", html);
-}
-
 void setup() {
   Serial.begin(115200);
+
+  // Initialize LittleFS
+  if (!LittleFS.begin()) {
+    Serial.println("LittleFS Mount Failed");
+    return;
+  }
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
@@ -31,11 +22,41 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi connected");
+  Serial.println("\nWiFi connected.");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  server.on("/", handleRoot);
+  // List files on LittleFS (debug)
+  File root = LittleFS.open("/");
+  File file = root.openNextFile();
+  Serial.println("Listing files on LittleFS:");
+  while (file) {
+    Serial.print("  ");
+    Serial.println(file.name());
+    file = root.openNextFile();
+  }
+
+  // Route for root / serving index.html
+  server.on("/", HTTP_GET, []() {
+    File file = LittleFS.open("/index.html", "r");
+    if (!file) {
+      server.send(404, "text/plain", "File not found");
+      return;
+    }
+    server.streamFile(file, "text/html");
+    file.close();
+  });
+
+  // Route for image
+  server.on("/logo.jpg", HTTP_GET, []() {
+    File file = LittleFS.open("/logo.jpg", "r");
+    if (!file) {
+      server.send(404, "text/plain", "Image not found");
+      return;
+    }
+    server.streamFile(file, "image/jpeg");
+    file.close();
+  });
 
   server.begin();
   Serial.println("HTTP server started");
