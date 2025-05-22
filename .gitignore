@@ -1,3 +1,4 @@
 /.metadata/
 build/
-wifi_credentials.h
+**/wifi_credentials.h
+**/http_credentials.h
