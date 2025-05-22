@@ -10,6 +10,14 @@ WiFiClient sseClient;
 unsigned long lastSSEUpdate = 0;
 bool sseActive = false;
 
+TaskHandle_t webServerTaskHandle = NULL;
+TaskHandle_t otherTaskHandle = NULL;
+
+void handleNewClient();
+void updateSSEClient();
+void webServerTask(void *pvParameters);
+void otherTask(void *pvParameters);
+
 void setup() {
   Serial.begin(115200);
   
@@ -26,6 +34,26 @@ void setup() {
   Serial.println(WiFi.localIP());
   
   server.begin();
+
+  xTaskCreatePinnedToCore(
+    webServerTask,      // Task function
+    "WebServerTask",    // Name
+    8192,               // Stack size
+    NULL,               // Parameter
+    1,                  // Priority
+    &webServerTaskHandle, // Task handle
+    0                   // Core 0
+  );
+
+  xTaskCreatePinnedToCore(
+    otherTask,          // Task function
+    "OtherTask",        // Name
+    4096,               // Stack size
+    NULL,               // Parameter
+    1,                  // Priority
+    &otherTaskHandle,   // Task handle
+    1                   // Core 1
+  );
 }
 
 void handleNewClient() {
@@ -109,39 +137,49 @@ void updateSSEClient() {
   }
 }
 
-void loop() {
-  static unsigned long lastLogTime = 0;
-  unsigned long currentTime = millis();
-  
-  // Log server state every LOG_INTERVAL ms
-  if (currentTime - lastLogTime >= LOG_INTERVAL) {
-    // Calculate uptime
-    unsigned long uptime = currentTime / 1000; // Convert to seconds
-    int days = uptime / 86400;
-    int hours = (uptime % 86400) / 3600;
-    int minutes = (uptime % 3600) / 60;
-    int seconds = uptime % 60;
-
-    Serial.println("\n--- Server Status ---");
-    Serial.print("Uptime: ");
-    if (days > 0) {
-      Serial.print(days);
-      Serial.print("d ");
-    }
-    Serial.print(hours);
-    Serial.print("h ");
-    Serial.print(minutes);
-    Serial.print("m ");
-    Serial.print(seconds);
-    Serial.println("s");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("WiFi Status: ");
-    Serial.println(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
-    Serial.println("-------------------");
-    lastLogTime = currentTime;
+void webServerTask(void *pvParameters) {
+  while (true) {
+    handleNewClient();
+    updateSSEClient();
+    vTaskDelay(1); // Yield to other tasks
   }
+}
 
-  handleNewClient();
-  updateSSEClient();
+void otherTask(void *pvParameters) {
+  static unsigned long lastLogTime = 0;
+  while (true) {
+    unsigned long currentTime = millis();
+    if (currentTime - lastLogTime >= LOG_INTERVAL) {
+      // Calculate uptime
+      unsigned long uptime = currentTime / 1000; // Convert to seconds
+      int days = uptime / 86400;
+      int hours = (uptime % 86400) / 3600;
+      int minutes = (uptime % 3600) / 60;
+      int seconds = uptime % 60;
+
+      Serial.println("\n--- Server Status ---");
+      Serial.print("Uptime: ");
+      if (days > 0) {
+        Serial.print(days);
+        Serial.print("d ");
+      }
+      Serial.print(hours);
+      Serial.print("h ");
+      Serial.print(minutes);
+      Serial.print("m ");
+      Serial.print(seconds);
+      Serial.println("s");
+      Serial.print("IP Address: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("WiFi Status: ");
+      Serial.println(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+      Serial.println("-------------------");
+      lastLogTime = currentTime;
+    }
+    vTaskDelay(10); // Yield to other tasks
+  }
+}
+
+void loop() {
+  // Not used, everything is in tasks
 } 
